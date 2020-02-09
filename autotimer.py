@@ -1,6 +1,6 @@
 from __future__ import print_function
 import time
-from os import system
+from os import system, path, mkdir
 from activity import *
 import json
 import datetime
@@ -60,6 +60,8 @@ def get_chrome_url():
     return _active_window_name
 
 try:
+    if not path.isdir('activities'):
+        mkdir('activities')
     activeList.initialize_me()
 except Exception:
     print('No json')

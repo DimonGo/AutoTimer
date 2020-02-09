@@ -10,6 +10,7 @@ class AcitivyList:
     
     def initialize_me(self):
         activity_list = AcitivyList([])
+        
         with open('activities/activities.json', 'r') as f:
             data = json.load(f)
             activity_list = AcitivyList(
