@@ -1,22 +1,5 @@
 # TODO: BUGS: vk.com window
 # TODO: youtube.com fullscreen bug below:
-"""
-2020-02-09 21:41:17.040 autotimer.py[80] get_chrome_url -> Find Control Timeout: {ControlType: EditControl}
-Traceback (most recent call last):
-  File ".\autotimer.py", line 107, in <module>
-    new_window_name = url_to_name(get_chrome_url())
-  File ".\autotimer.py", line 80, in get_chrome_url
-    return 'https://' + edit.GetValuePattern().Value
-  File "AutoTimer\env\lib\site-packages\uiautomation\uiautomation.py", line 6612, in GetValuePattern
-    return self.GetPattern(PatternId.ValuePattern)
-  File "AutoTimer\env\lib\site-packages\uiautomation\uiautomation.py", line 5598, in GetPattern
-    pattern = self.Element.GetCurrentPattern(patternId)
-  File "AutoTimer\env\lib\site-packages\uiautomation\uiautomation.py", line 5660, in Element
-    self.Refind(maxSearchSeconds=TIME_OUT_SECOND, searchIntervalSeconds=self.searchInterval)
-  File "AutoTimer\env\lib\site-packages\uiautomation\uiautomation.py", line 5908, in Refind
-    raise LookupError('Find Control Timeout: ' + self.GetSearchPropertiesStr())
-LookupError: Find Control Timeout: {ControlType: EditControl}
-"""
 
 
 from __future__ import print_function
@@ -28,6 +11,7 @@ import re
 from os import path, mkdir  # system
 from activity import *
 from dateutil.parser import parser
+
 
 active_window_name = ""
 activity_name = ""
@@ -52,13 +36,17 @@ def url_to_name(url):
     :param url: str
     :return: FQDN
     """
-    string_list = url.split('/')
-    return string_list[2]
+    try:
+        string_list = url.split('/')
+        return string_list[2]
+    except IndexError:
+        string_list = "youtube_fullscreen_mode"
+        return string_list
 
 
 def get_active_window():
     """
-    Resolves window's title
+    Resolves title of opened window
     :return: str, window's name
     """
     _active_window_name = None
@@ -77,7 +65,7 @@ def get_active_window():
 
 def excluded_activities():
     """
-    Excludes activity's names patterns
+    Excludes
     :return: True if exclusion pattern matches, False if not
     """
     window_name = get_active_window()
@@ -94,22 +82,57 @@ def get_chrome_url():
     Resolves url of the current chrome's active tab
     :return: str, active tab title
     """
-    if sys.platform in ['Windows', 'win32', 'cygwin']:
-        window = win32gui.GetForegroundWindow()
-        chromeControl = auto.ControlFromHandle(window)
-        edit = chromeControl.EditControl()
-        return 'https://' + edit.GetValuePattern().Value
-    elif sys.platform in ['Mac', 'darwin', 'os2', 'os2emx']:
-        textOfMyScript = """tell app "google chrome" to get the url of the active tab of window 1"""
-        s = NSAppleScript.initWithSource_(
-            NSAppleScript.alloc(), textOfMyScript)
-        results, err = s.executeAndReturnError_(None)
-        return results.stringValue()
-    else:
-        print("sys.platform={platform} is not supported."
-              .format(platform=sys.platform))
-        print(sys.version)
-    return _active_window_name
+    try:
+        if sys.platform in ['Windows', 'win32', 'cygwin']:
+            window = win32gui.GetForegroundWindow()
+            chrome_control = auto.ControlFromHandle(window)
+            edit = chrome_control.EditControl()
+            return 'https://' + edit.GetValuePattern().Value
+        elif sys.platform in ['Mac', 'darwin', 'os2', 'os2emx']:
+            text_of_my_script = """tell app "google chrome" to get the url of the active tab of window 1"""
+            s = NSAppleScript.initWithSource_(
+                NSAppleScript.alloc(), text_of_my_script)
+            results, err = s.executeAndReturnError_(None)
+            return results.stringValue()
+        else:
+            print("sys.platform={platform} is not supported."
+                  .format(platform=sys.platform))
+            print(sys.version)
+        return _active_window_name
+    except LookupError:
+        # 2020-02-09 21:41:17.040 autotimer.py[80] get_chrome_url -> Find Control Timeout: {ControlType: EditControl}
+        # Traceback (most recent call last):
+        #   File ".\autotimer.py", line 107, in <module>
+        #     new_window_name = url_to_name(get_chrome_url())
+        #   File ".\autotimer.py", line 80, in get_chrome_url
+        #     return 'https://' + edit.GetValuePattern().Value
+        #   File "AutoTimer\env\lib\site-packages\uiautomation\uiautomation.py", line 6612, in GetValuePattern
+        #     return self.GetPattern(PatternId.ValuePattern)
+        #   File "AutoTimer\env\lib\site-packages\uiautomation\uiautomation.py", line 5598, in GetPattern
+        #     pattern = self.Element.GetCurrentPattern(patternId)
+        #   File "AutoTimer\env\lib\site-packages\uiautomation\uiautomation.py", line 5660, in Element
+        #     self.Refind(maxSearchSeconds=TIME_OUT_SECOND, searchIntervalSeconds=self.searchInterval)
+        #   File "AutoTimer\env\lib\site-packages\uiautomation\uiautomation.py", line 5908, in Refind
+        #     raise LookupError('Find Control Timeout: ' + self.GetSearchPropertiesStr())
+        # LookupError: Find Control Timeout: {ControlType: EditControl}
+        #
+        # pass
+        _active_window_name = "undefined"
+        return _active_window_name
+    except NameError:
+        # 2020 - 02 - 09 22: 24:50.020 autotimer.py[81] get_chrome_url -> Find ControlTimeout: {ControlType: EditControl}
+        # Traceback (most recent call last):
+        #   File ".\autotimer.py", line 111, in <module>
+        #     new_window_name = url_to_name(get_chrome_url())
+        #   File ".\autotimer.py", line 95, in get_chrome_url
+        #     return _active_window_name
+        # NameError: name '_active_window_name' is not defined
+        #
+        # pass
+        _active_window_name = "undefined"
+        return _active_window_name
+    except Exception as e:
+        raise e
 
 
 try:
