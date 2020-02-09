@@ -1,9 +1,3 @@
-
-import datetime
-import json
-from dateutil.parser import parser
-
-
 class AcitivyList:
     def __init__(self, activities):
         self.activities = activities

@@ -1,18 +1,33 @@
+# TODO: BUGS: vk.com window
+# TODO: youtube.com fullscreen bug below:
+"""
+2020-02-09 21:41:17.040 autotimer.py[80] get_chrome_url -> Find Control Timeout: {ControlType: EditControl}
+Traceback (most recent call last):
+  File ".\autotimer.py", line 107, in <module>
+    new_window_name = url_to_name(get_chrome_url())
+  File ".\autotimer.py", line 80, in get_chrome_url
+    return 'https://' + edit.GetValuePattern().Value
+  File "AutoTimer\env\lib\site-packages\uiautomation\uiautomation.py", line 6612, in GetValuePattern
+    return self.GetPattern(PatternId.ValuePattern)
+  File "AutoTimer\env\lib\site-packages\uiautomation\uiautomation.py", line 5598, in GetPattern
+    pattern = self.Element.GetCurrentPattern(patternId)
+  File "AutoTimer\env\lib\site-packages\uiautomation\uiautomation.py", line 5660, in Element
+    self.Refind(maxSearchSeconds=TIME_OUT_SECOND, searchIntervalSeconds=self.searchInterval)
+  File "AutoTimer\env\lib\site-packages\uiautomation\uiautomation.py", line 5908, in Refind
+    raise LookupError('Find Control Timeout: ' + self.GetSearchPropertiesStr())
+LookupError: Find Control Timeout: {ControlType: EditControl}
+"""
+
+
 from __future__ import print_function
 import time
-from os import system, path, mkdir
-from activity import *
 import json
 import datetime
 import sys
-if sys.platform in ['Windows', 'win32', 'cygwin']:
-    import win32gui
-    import uiautomation as auto
-elif sys.platform in ['Mac', 'darwin', 'os2', 'os2emx']:
-    from AppKit import NSWorkspace
-    from Foundation import *
-elif sys.platform in ['linux', 'linux2']:
-        import linux as l
+import re
+from os import path, mkdir  # system
+from activity import *
+from dateutil.parser import parser
 
 active_window_name = ""
 activity_name = ""
@@ -21,19 +36,38 @@ activeList = AcitivyList([])
 first_time = True
 
 
+if sys.platform in ['Windows', 'win32', 'cygwin']:
+    import win32gui
+    import uiautomation as auto
+elif sys.platform in ['Mac', 'darwin', 'os2', 'os2emx']:
+    from AppKit import NSWorkspace
+    from Foundation import *
+elif sys.platform in ['linux', 'linux2']:
+    import linux as l
+
+
 def url_to_name(url):
+    """
+    Retrieves url currently browsing on
+    :param url: str
+    :return: FQDN
+    """
     string_list = url.split('/')
     return string_list[2]
 
 
 def get_active_window():
+    """
+    Resolves window's title
+    :return: str, window's name
+    """
     _active_window_name = None
     if sys.platform in ['Windows', 'win32', 'cygwin']:
         window = win32gui.GetForegroundWindow()
         _active_window_name = win32gui.GetWindowText(window)
     elif sys.platform in ['Mac', 'darwin', 'os2', 'os2emx']:
         _active_window_name = (NSWorkspace.sharedWorkspace()
-                               .activeApplication()['NSApplicationName'])
+            .activeApplication()['NSApplicationName'])
     else:
         print("sys.platform={platform} is not supported."
               .format(platform=sys.platform))
@@ -41,7 +75,25 @@ def get_active_window():
     return _active_window_name
 
 
+def excluded_activities():
+    """
+    Excludes activity's names patterns
+    :return: True if exclusion pattern matches, False if not
+    """
+    window_name = get_active_window()
+    exclusions = ['\d+%\s(complete)']
+    #
+    for exclusion in exclusions:
+        if re.match(re.compile(exclusion), window_name):
+            return True
+    return False
+
+
 def get_chrome_url():
+    """
+    Resolves url of the current chrome's active tab
+    :return: str, active tab title
+    """
     if sys.platform in ['Windows', 'win32', 'cygwin']:
         window = win32gui.GetForegroundWindow()
         chromeControl = auto.ControlFromHandle(window)
@@ -59,13 +111,13 @@ def get_chrome_url():
         print(sys.version)
     return _active_window_name
 
+
 try:
     if not path.isdir('activities'):
         mkdir('activities')
     activeList.initialize_me()
 except Exception:
     print('No json')
-
 
 try:
     while True:
@@ -78,23 +130,22 @@ try:
             new_window_name = l.get_active_window_x()
             if 'Google Chrome' in new_window_name:
                 new_window_name = l.get_chrome_url_x()
-
-        
-        if active_window_name != new_window_name:
+        #
+        if (active_window_name != new_window_name) and not excluded_activities():
             print(active_window_name)
             activity_name = active_window_name
-
+            #
             if not first_time:
                 end_time = datetime.datetime.now()
                 time_entry = TimeEntry(start_time, end_time, 0, 0, 0, 0)
                 time_entry._get_specific_times()
-
+                #
                 exists = False
                 for activity in activeList.activities:
                     if activity.name == activity_name:
                         exists = True
                         activity.time_entries.append(time_entry)
-
+                #
                 if not exists:
                     activity = Activity(activity_name, [time_entry])
                     activeList.activities.append(activity)
@@ -104,9 +155,9 @@ try:
                     start_time = datetime.datetime.now()
             first_time = False
             active_window_name = new_window_name
-
+        #
         time.sleep(1)
-    
+
 except KeyboardInterrupt:
     with open('activities/activities.json', 'w') as json_file:
         json.dump(activeList.serialize(), json_file, indent=4, sort_keys=True)
