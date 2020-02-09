@@ -96,7 +96,7 @@ try:
                 if not exists:
                     activity = Activity(activity_name, [time_entry])
                     activeList.activities.append(activity)
-                with open('activities.json', 'w') as json_file:
+                with open('activities/activities.json', 'w') as json_file:
                     json.dump(activeList.serialize(), json_file,
                               indent=4, sort_keys=True)
                     start_time = datetime.datetime.now()
@@ -106,5 +106,5 @@ try:
         time.sleep(1)
     
 except KeyboardInterrupt:
-    with open('activities.json', 'w') as json_file:
+    with open('activities/activities.json', 'w') as json_file:
         json.dump(activeList.serialize(), json_file, indent=4, sort_keys=True)

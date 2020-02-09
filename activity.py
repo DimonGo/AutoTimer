@@ -1,7 +1,7 @@
 
 import datetime
 import json
-from dateutil import parser
+from dateutil.parser import parser
 
 
 class AcitivyList:
@@ -10,7 +10,7 @@ class AcitivyList:
     
     def initialize_me(self):
         activity_list = AcitivyList([])
-        with open('activities.json', 'r') as f:
+        with open('activities/activities.json', 'r') as f:
             data = json.load(f)
             activity_list = AcitivyList(
                 activities = self.get_activities_from_json(data)
