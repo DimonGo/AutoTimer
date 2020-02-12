@@ -99,7 +99,9 @@ def get_chrome_url():
                   .format(platform=sys.platform))
             print(sys.version)
         return _active_window_name
-    except LookupError:
+    except (LookupError, NameError):
+        _active_window_name = "undefined"
+        return _active_window_name
         # 2020-02-09 21:41:17.040 autotimer.py[80] get_chrome_url -> Find Control Timeout: {ControlType: EditControl}
         # Traceback (most recent call last):
         #   File ".\autotimer.py", line 107, in <module>
@@ -117,9 +119,6 @@ def get_chrome_url():
         # LookupError: Find Control Timeout: {ControlType: EditControl}
         #
         # pass
-        _active_window_name = "undefined"
-        return _active_window_name
-    except NameError:
         # 2020 - 02 - 09 22: 24:50.020 autotimer.py[81] get_chrome_url -> Find ControlTimeout: {ControlType: EditControl}
         # Traceback (most recent call last):
         #   File ".\autotimer.py", line 111, in <module>
@@ -129,8 +128,6 @@ def get_chrome_url():
         # NameError: name '_active_window_name' is not defined
         #
         # pass
-        _active_window_name = "undefined"
-        return _active_window_name
     except Exception as e:
         raise e
 
