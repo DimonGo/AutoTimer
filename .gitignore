@@ -3,3 +3,4 @@ __pycache__/*
 activities/*.json
 .idea
 @AutomationLog.txt
+env
