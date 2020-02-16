@@ -69,7 +69,11 @@ def excluded_activities():
     :return: True if exclusion pattern matches, False if not
     """
     window_name = get_active_window()
-    exclusions = ['\d+%\s(complete)']
+    exclusions = [
+        '\d+%\s(complete)',
+        'Volume Control',
+        'Default Browser'
+    ]
     #
     for exclusion in exclusions:
         if re.match(re.compile(exclusion), window_name):
